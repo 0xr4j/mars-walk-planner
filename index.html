@@ -293,7 +293,16 @@ map.on('mousemove', e=>coords.textContent=`lat ${e.latlng.lat.toFixed(4)}°, lon
 (async()=>{
   const end=new Date(), start=new Date(end-30*864e5), f=d=>d.toISOString().slice(0,10);
   try{
-    const [flr, sep, cme] = await Promise.all(['FLR','SEP','CME'].map(t=>fetch(`https://api.nasa.gov/DONKI/${t}?startDate=${f(start)}&endDate=${f(end)}&api_key=DEMO_KEY`).then(r=>r.ok?r.json():[]).catch(()=>[])));
+    // cache for 1 h so reloads don't burn the DEMO_KEY rate limit; any failed request = feed unavailable (never show fake zeros)
+    let cached = null; try { cached = JSON.parse(localStorage.getItem('donki') || 'null'); } catch(e){}
+    let flr, sep, cme;
+    if (cached && Date.now() - cached.t < 36e5) ({flr, sep, cme} = cached);
+    else {
+      [flr, sep, cme] = await Promise.all(['FLR','SEP','CME'].map(t => fetch(`https://api.nasa.gov/DONKI/${t}?startDate=${f(start)}&endDate=${f(end)}&api_key=DEMO_KEY`)
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); }).then(s => s ? JSON.parse(s) : [])));
+      try { localStorage.setItem('donki', JSON.stringify({t: Date.now(), flr, sep, cme})); } catch(e){}
+    }
+    flr = flr || []; sep = sep || []; cme = cme || [];
     const bigFlares=(flr||[]).filter(x=>/^[XM]/.test(x.classType||''));
     const lastSep=(sep||[]).slice(-1)[0];
     const sepRecent = lastSep && (end-new Date(lastSep.eventTime))<3*864e5;
@@ -302,7 +311,7 @@ map.on('mousemove', e=>coords.textContent=`lat ${e.latlng.lat.toFixed(4)}°, lon
       <div class="status ${level}">${level==='nogo'?'SHELTER — recent SEP event':level==='caution'?'MONITOR — elevated flare activity':'NOMINAL — no recent SEP'}</div>
       <div style="margin-top:4px">Events observed from Earth/L1; Mars exposure depends on heliospheric geometry — treat as advisory.</div>`;
     hWx.textContent = level==='nogo'?'SHELTER':level==='caution'?'MONITOR':'NOMINAL'; hWxD.textContent=`${bigFlares.length} M/X flares · ${(sep||[]).length} SEP (30d)`;
-  }catch(e){ wx.textContent='Space weather feed unavailable (offline / rate limit).'; hWx.textContent='N/A'; }
+  }catch(e){ wx.innerHTML='<div class="status caution">LIVE FEED TEMPORARILY UNAVAILABLE</div><div style="margin-top:4px">NASA DONKI API did not respond (offline or API rate limit). Try again in a few minutes. Check radiation status with mission control before EVA.</div>'; hWx.textContent='N/A'; hWxD.textContent='feed unavailable'; }
 })();
 
 update();
