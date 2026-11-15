@@ -2,7 +2,11 @@
 
 A layered EVA (Marswalk) planning map for the first human explorers on Mars. Built for NASA Space Apps 2026: *Interplanetary Survival Guide: Martian Map*.
 
-**Live demo:** open `index.html`, or use the GitHub Pages link.
+**🚀 Live demo:** https://0xr4j.github.io/mars-walk-planner/
+
+**📊 Slides:** [Marswalk_Planner_Slides.pdf](Marswalk_Planner_Slides.pdf)
+
+**🎬 Demo video script:** [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
 
 ## What it does
 - **Layered NASA data** with toggles and opacity sliders, served live from NASA/JPL Mars Trek:
