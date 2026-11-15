@@ -78,7 +78,7 @@ body.hud #hud{display:block}
     <button id="bAdd">✚ Add waypoints</button>
     <button id="bClear">Clear route</button>
     <button id="bHud">HUD mode</button>
-    <button onclick="location.search='?demo'">▶ Demo</button>
+    <button onclick="location.search='?tour'">▶ Guided tour</button>
   </div>
 </header>
 <div id="map"></div>
@@ -306,7 +306,7 @@ map.on('mousemove', e=>coords.textContent=`lat ${e.latlng.lat.toFixed(4)}°, lon
 })();
 
 update();
-if (/[?&]demo\b/.test(location.search)) { const s = document.createElement('script'); s.src = 'demo.js'; document.body.appendChild(s); }
+if (/[?&](tour|demo)\b/.test(location.search)) { const s = document.createElement('script'); s.src = 'demo.js'; document.body.appendChild(s); }
 </script>
 </body>
 </html>

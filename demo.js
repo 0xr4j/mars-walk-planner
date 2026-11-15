@@ -1,4 +1,4 @@
-// Marswalk Planner — cinematic self-playing demo. Open index.html?demo
+// Marswalk Planner — self-playing guided tour mode. Open index.html?tour
 // Uses the app's globals (map, LAYERS, STOPS, HAB, userPts, update, ...).
 // Developed by Team Prithvi with an AI coding assistant. Voice-over: synthetic browser text-to-speech.
 (() => {
@@ -34,7 +34,7 @@ body.dm-run #left{display:none}
 `;
 document.head.insertAdjacentHTML('beforeend', `<style>${css}</style><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">`);
 document.body.insertAdjacentHTML('beforeend', `
-<div id="dm-start"><div><b>▶ MARSWALK</b><br><small>CLICK TO START THE CINEMATIC DEMO · TURN SOUND ON<br>Voice-over: synthetic speech (browser text-to-speech)<br><br>Start recording first: Win + Alt + R (Xbox Game Bar), or Clipchamp screen recorder<br>Press F11 for full screen</small></div></div>
+<div id="dm-start"><div><b>▶ MARSWALK</b><br><small>CLICK TO START THE GUIDED TOUR · TURN SOUND ON<br>Voice-over: synthetic speech (browser text-to-speech)<br><br>Press F11 for full screen</small></div></div>
 <div class="dm-bar" id="dm-top"></div><div class="dm-bar" id="dm-bot"></div>
 <div id="dm-chap"></div><div id="dm-cap"></div><div id="dm-flash"></div><div id="dm-stamp"></div>
 <div id="dm-card"><canvas id="dm-stars"></canvas><div class="k" id="dm-k"></div><div class="t" id="dm-t"></div><div class="s" id="dm-s"></div></div>`);
