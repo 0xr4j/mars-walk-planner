@@ -34,5 +34,23 @@ We split the project equally: every member wrote code, did research, and worked 
 | **Nikhil Kumar** | Wrote the safety engine (Mars-radius distance maths, EVA time, consumables margin, GO / CAUTION / NO-GO) and the live NASA DONKI space-weather panel | Researched the four science stops (Séítah, Máaz, the delta front, the upper fan) and the radiation context (Curiosity RAD dose) | Wrote the narration for the cinematic demo |
 | **Suryansh Pratap Singh** | Designed the UI and helmet HUD mode, and built the self-playing cinematic demo | Researched the thermal (THEMIS, TES) and topographic (MOLA/HRSC) data and mapped the hazard zones (dunes, scarp, boulder field) | Designed the presentation slides |
 
+## Use of AI
+In line with the NASA Space Apps rules on Super Intelligence (SI) tools:
+- **Code:** `index.html` and `demo.js` were written with AI assistance (Claude by Anthropic). The team chose the concept, site, features and data, and directed, tested and reviewed the code. Both files say so in comments and metadata.
+- **Research help:** AI was used to help find Mars Trek layer IDs and check that each one works. Every dataset shown is real NASA data, streamed live from NASA services.
+- **Slides:** the slide deck layout and text were drafted with AI assistance and edited by the team.
+- **Audio:** the voice-over in the cinematic demo is synthetic speech from the browser's built-in text-to-speech, and the soundtrack is generated in code (WebAudio). This is labelled on the demo's start screen.
+- **No AI-generated images** are used. All imagery comes from NASA missions (MRO, Mars Odyssey, MGS, Viking, Mars Express).
+
+## NASA data used
+- NASA/JPL Mars Trek WMTS (trek.nasa.gov): `Mars_Viking_MDIM21_ClrMosaic_global_232m`, `Mars_MOLA_blend200ppx_HRSC_ClrShade_clon0dd_200mpp_lzw`, `JEZ_ctx_B_soc_008_orthoMosaic_6m_Eqc_latTs0_lon0`, `JEZ_hirise_soc_006_orthoMosaic_25cm_Eqc_latTs0_lon0_first_dd`, `THEMIS_DayIR_ControlledMosaics_100m_v2_oct2018`, `THEMIS_NightIR_ControlledMosaics_100m_v2_oct2018`, `TES_Thermal_Inertia`
+- NASA CCMC DONKI space weather API (api.nasa.gov)
+- Mars 2020 Perseverance mission science and raw images (mars.nasa.gov)
+- Curiosity RAD surface radiation dose (Hassler et al., Science, 2014)
+- Mars Express HRSC topography is ESA data, provided through the MOLA/HRSC blend on Mars Trek
+
+## Other references and tools
+Leaflet 1.9.4 (BSD-2), served from cdnjs · Google Fonts (Inter, JetBrains Mono, Space Grotesk; SIL OFL) · GitHub Pages hosting
+
 ## Tech
 A single static HTML file using Leaflet (EPSG:4326) and Mars Trek WMTS tiles. No build step.
