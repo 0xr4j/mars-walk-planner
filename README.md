@@ -1,5 +1,7 @@
 # Marswalk Planner: Jezero Crater
 
+**Team Prithvi**
+
 A layered EVA (Marswalk) planning map for the first human explorers on Mars. Built for NASA Space Apps 2026: *Interplanetary Survival Guide: Martian Map*.
 
 **🚀 Live demo:** https://0xr4j.github.io/mars-walk-planner/
