@@ -67,7 +67,7 @@ body.hud #hud{display:block}
 #hud .tl{top:50px;left:0}#hud .tr{top:50px;right:0;text-align:right}#hud .bl{bottom:30px;left:0}#hud .br{bottom:30px;right:0;text-align:right}
 #hud .big{font-size:28px;font-weight:700}
 #hud .cross{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px;border:2px solid var(--hud);border-radius:50%}
-@media (max-width:800px){#left,#right{position:static;width:auto;margin:8px;max-height:none}#map{position:relative;height:60vh}header{position:relative;background:var(--bg)}body{overflow:auto}#hud{position:fixed}}
+@media (max-width:800px){#left,#right{position:static;width:auto;margin:8px;max-height:none}#map{position:relative;height:60vh}header{position:relative;background:var(--bg);flex-wrap:wrap;gap:8px;padding:10px 12px}header .sub{display:none}header .btns{margin-left:0;width:100%;flex-wrap:wrap}header .btns button{flex:1 1 auto}body{overflow:auto}#hud{position:fixed}#coords,#scale{display:none}}
 </style>
 </head>
 <body>
