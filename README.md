@@ -9,9 +9,6 @@ A layered EVA (Marswalk) planning map for the first human explorers on Mars. Bui
 **🎬 Cinematic demo (self-playing, with voice-over):** https://0xr4j.github.io/mars-walk-planner/?demo
 
 **📊 Slides:** [Marswalk_Planner_Slides.pdf](Marswalk_Planner_Slides.pdf)
-
-**🎬 Demo video script:** [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
-
 ## What it does
 - **Layered NASA data** with toggles and opacity sliders, served live from NASA/JPL Mars Trek:
   - Optical: Viking MDIM 2.1, MRO CTX 6 m, MRO HiRISE 25 cm (Jezero)
@@ -34,7 +31,7 @@ We split the project equally: every member wrote code, did research, and worked 
 | Member | 💻 Code | 🔬 Research & data | 🎤 Presentation |
 |---|---|---|---|
 | **Raj Jha** | Built the core map in Leaflet (EPSG:4326) and integrated the NASA/JPL Mars Trek WMTS layers, with layer toggles and opacity sliders | Searched the Mars Trek catalogue and tested each layer's product IDs, zoom limits and coverage bounds; chose Jezero Crater as the site | Set up the GitHub repo and Pages deployment; wrote the README |
-| **Nikhil Kumar** | Wrote the safety engine (Mars-radius distance maths, EVA time, consumables margin, GO / CAUTION / NO-GO) and the live NASA DONKI space-weather panel | Researched the four science stops (Séítah, Máaz, the delta front, the upper fan) and the radiation context (Curiosity RAD dose) | Wrote the demo video script and voice-over |
+| **Nikhil Kumar** | Wrote the safety engine (Mars-radius distance maths, EVA time, consumables margin, GO / CAUTION / NO-GO) and the live NASA DONKI space-weather panel | Researched the four science stops (Séítah, Máaz, the delta front, the upper fan) and the radiation context (Curiosity RAD dose) | Wrote the narration for the cinematic demo |
 | **Suryansh Pratap Singh** | Designed the UI and helmet HUD mode, and built the self-playing cinematic demo | Researched the thermal (THEMIS, TES) and topographic (MOLA/HRSC) data and mapped the hazard zones (dunes, scarp, boulder field) | Designed the presentation slides |
 
 ## Tech
