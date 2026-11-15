@@ -6,6 +6,8 @@ A layered EVA (Marswalk) planning map for the first human explorers on Mars. Bui
 
 **🚀 Live demo:** https://0xr4j.github.io/mars-walk-planner/
 
+**🎬 Cinematic demo (self-playing, with voice-over):** https://0xr4j.github.io/mars-walk-planner/?demo
+
 **📊 Slides:** [Marswalk_Planner_Slides.pdf](Marswalk_Planner_Slides.pdf)
 
 **🎬 Demo video script:** [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
