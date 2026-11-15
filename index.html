@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Marswalk Planner — Jezero</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0b0a;--panel:#17120fe6;--line:#3a2a20;--text:#f3e6dc;--mute:#b39a88;--accent:#ff7a3d;--ok:#5fd18b;--warn:#ffc53d;--bad:#ff4d4d;--hud:#7dffb2}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:14px/1.4 Inter,system-ui,sans-serif}
+#map{position:absolute;inset:0;background:#000}
+header{position:absolute;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;gap:12px;padding:8px 14px;background:linear-gradient(#0d0b0aee,#0d0b0a00);pointer-events:none}
+header h1{margin:0;font-size:18px;font-weight:800;letter-spacing:.5px}
+header h1 span{color:var(--accent)}
+header .sub{color:var(--mute);font-size:12px}
+header .btns{margin-left:auto;display:flex;gap:6px;pointer-events:auto}
+button{background:#2a1d15;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font:600 12px Inter;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.on{background:var(--accent);color:#1a0d05;border-color:var(--accent)}
+.panel{position:absolute;z-index:1000;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;backdrop-filter:blur(6px);max-height:calc(100% - 70px);overflow:auto}
+#left{top:56px;left:12px;width:290px}
+#right{top:56px;right:12px;width:320px}
+.panel h2{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent)}
+.panel section{margin-bottom:14px}
+.layer{display:grid;grid-template-columns:18px 1fr;gap:2px 6px;align-items:center;margin:6px 0}
+.layer small{grid-column:2;color:var(--mute);font-size:11px}
+.layer input[type=range]{grid-column:2;width:100%;accent-color:var(--accent)}
+label{cursor:pointer}
+.kv{display:grid;grid-template-columns:1fr auto;gap:3px 8px;font-family:'JetBrains Mono',monospace;font-size:12px}
+.kv b{color:var(--accent);text-align:right}
+.stop{border-left:3px solid var(--accent);padding:4px 8px;margin:6px 0;background:#ffffff08;border-radius:0 6px 6px 0;cursor:pointer}
+.stop .t{font-weight:600}.stop .d{color:var(--mute);font-size:12px}
+.stop .m{font-family:'JetBrains Mono';font-size:11px;color:var(--warn)}
+.status{padding:6px 8px;border-radius:6px;font-weight:700;font-size:12px;margin-top:6px}
+.go{background:#5fd18b22;color:var(--ok);border:1px solid var(--ok)}
+.caution{background:#ffc53d22;color:var(--warn);border:1px solid var(--warn)}
+.nogo{background:#ff4d4d22;color:var(--bad);border:1px solid var(--bad)}
+.legend{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--mute);margin:3px 0}
+.sw{width:14px;height:14px;border-radius:3px;display:inline-block}
+.src{font-size:11px;color:var(--mute)}.src code{color:var(--text);word-break:break-all}
+.ctl{display:flex;gap:6px;align-items:center;margin:6px 0;font-size:12px}
+.ctl input[type=number]{width:60px;background:#000;color:var(--text);border:1px solid var(--line);border-radius:4px;padding:3px}
+#scale{position:absolute;left:12px;bottom:12px;z-index:1000;font:11px 'JetBrains Mono';color:var(--text)}
+#scale div{height:6px;border:2px solid var(--text);border-top:0}
+#coords{position:absolute;right:12px;bottom:12px;z-index:1000;font:11px 'JetBrains Mono';background:var(--panel);padding:4px 8px;border-radius:6px}
+.leaflet-container{background:#000;font-family:Inter}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#17120f;color:var(--text)}
+.leaflet-popup-content img{width:100%;border-radius:6px;margin-top:6px}
+.leaflet-control-attribution{background:#0008!important;color:var(--mute)!important}
+.leaflet-control-attribution a{color:var(--accent)!important}
+.pin{background:var(--accent);color:#1a0d05;border:2px solid #fff;border-radius:50%;width:26px!important;height:26px!important;display:grid;place-items:center;font:800 12px Inter;box-shadow:0 0 10px #000}
+.hab{background:#fff;color:#000;border-radius:6px;font-size:16px}
+.wp{background:#7dd3ff;border-color:#000}
+/* HUD mode */
+body.hud .panel,body.hud header .sub{display:none}
+body.hud #map{filter:saturate(.3) contrast(1.2) brightness(.8) sepia(.2) hue-rotate(60deg)}
+#hud{display:none;position:absolute;inset:0;z-index:999;pointer-events:none;font-family:'JetBrains Mono';color:var(--hud);text-shadow:0 0 6px #000}
+body.hud #hud{display:block}
+#hud .ring{position:absolute;inset:6%;border:2px solid #7dffb255;border-radius:50% / 40%}
+#hud .tl,#hud .tr,#hud .bl,#hud .br{position:absolute;font-size:14px;padding:16px 28px}
+#hud .tl{top:50px;left:0}#hud .tr{top:50px;right:0;text-align:right}#hud .bl{bottom:30px;left:0}#hud .br{bottom:30px;right:0;text-align:right}
+#hud .big{font-size:28px;font-weight:700}
+#hud .cross{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px;border:2px solid var(--hud);border-radius:50%}
+@media (max-width:800px){#left,#right{position:static;width:auto;margin:8px;max-height:none}#map{position:relative;height:60vh}header{position:relative;background:var(--bg)}body{overflow:auto}#hud{position:fixed}}
+</style>
+</head>
+<body>
+<header>
+  <h1><span>MARSWALK</span> PLANNER</h1>
+  <div class="sub">Jezero Crater EVA ops · NASA Mars Trek data</div>
+  <div class="btns">
+    <button id="bAdd">✚ Add waypoints</button>
+    <button id="bClear">Clear route</button>
+    <button id="bHud">HUD mode</button>
+  </div>
+</header>
+<div id="map"></div>
+
+<div id="hud">
+  <div class="ring"></div><div class="cross"></div>
+  <div class="tl">NEXT STOP<div class="big" id="hNext">—</div><div id="hNextD"></div></div>
+  <div class="tr">O₂ / CONSUMABLES<div class="big" id="hO2">—</div><div id="hRet"></div></div>
+  <div class="bl">ROUTE<div class="big" id="hDist">—</div><div id="hTime"></div></div>
+  <div class="br">SPACE WX<div class="big" id="hWx">—</div><div id="hWxD"></div></div>
+</div>
+
+<div class="panel" id="left">
+  <section>
+    <h2>Data layers</h2>
+    <div id="layers"></div>
+    <div class="legend"><span class="sw" style="background:linear-gradient(90deg,#111,#eee)"></span>THEMIS IR: bright = warm (day) / high thermal inertia (night, rocky)</div>
+    <div class="legend"><span class="sw" style="background:linear-gradient(90deg,#3050ff,#30ff80,#ffef30,#ff4030,#fff)"></span>MOLA/HRSC: low → high elevation</div>
+  </section>
+  <section>
+    <h2>Mission overlays</h2>
+    <label class="layer"><input type="checkbox" id="oRoute" checked><span>Planned EVA route + science stops</span></label>
+    <label class="layer"><input type="checkbox" id="oHaz" checked><span>Hazard zones (planning annotations)</span></label>
+    <label class="layer"><input type="checkbox" id="oRing" checked><span>Walk-back safety radius</span></label>
+    <div class="legend"><span class="sw" style="background:#ff4d4d66;border:1px solid #ff4d4d"></span>No-go: dunes / steep scarp</div>
+    <div class="legend"><span class="sw" style="background:#ffc53d55;border:1px solid #ffc53d"></span>Caution: rough, boulder fields</div>
+  </section>
+  <section>
+    <h2>Data sources (NASA)</h2>
+    <div class="src" id="sources"></div>
+  </section>
+</div>
+
+<div class="panel" id="right">
+  <section>
+    <h2>EVA plan</h2>
+    <div class="ctl">Suit walk speed <input type="number" id="speed" value="2.0" step="0.1" min="0.5"> km/h</div>
+    <div class="ctl">Time per science stop <input type="number" id="stopMin" value="30" step="5" min="0"> min</div>
+    <div class="ctl">EVA consumables <input type="number" id="evaH" value="7" step="0.5" min="1"> h</div>
+    <div class="kv">
+      <span>Route distance</span><b id="kDist">—</b>
+      <span>Walking time</span><b id="kWalk">—</b>
+      <span>Science time</span><b id="kSci">—</b>
+      <span>Total EVA time</span><b id="kTot">—</b>
+      <span>Consumables margin</span><b id="kMargin">—</b>
+      <span>Hazard crossings</span><b id="kHaz">—</b>
+    </div>
+    <div id="goStatus" class="status">—</div>
+  </section>
+  <section>
+    <h2>Science stops</h2>
+    <div id="stops"></div>
+  </section>
+  <section>
+    <h2>Space weather (NASA DONKI)</h2>
+    <div id="wx" class="src">Loading live solar events…</div>
+    <div class="src" style="margin-top:6px">Mars has no global magnetic field and a thin atmosphere: a solar energetic particle (SEP) event means crew must shelter. Surface GCR dose ≈ 0.64 mSv/day (Curiosity RAD, Hassler et al. 2014).</div>
+  </section>
+</div>
+
+<div id="scale"><span id="scaleTxt"></span><div id="scaleBar"></div></div>
+<div id="coords">lat —, lon —</div>
+
+<script>
+// ---------- Mars geometry ----------
+const R_MARS = 3389.5; // km, Mars mean radius (Leaflet's built-in distance assumes Earth!)
+function dist(a, b){ // haversine on Mars, km
+  const r = Math.PI/180, dLat=(b.lat-a.lat)*r, dLon=(b.lng-a.lng)*r;
+  const h = Math.sin(dLat/2)**2 + Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLon/2)**2;
+  return 2*R_MARS*Math.asin(Math.sqrt(h));
+}
+const fmtKm = k => k < 1 ? (k*1000).toFixed(0)+' m' : k.toFixed(2)+' km';
+const fmtH = h => { const m = Math.round(h*60); return Math.floor(m/60)+'h '+String(m%60).padStart(2,'0')+'m'; };
+
+// ---------- Map ----------
+const map = L.map('map', {crs: L.CRS.EPSG4326, center:[18.452,77.43], zoom:13, minZoom:2, maxZoom:19, zoomControl:false, worldCopyJump:false});
+L.control.zoom({position:'bottomright'}).addTo(map);
+map.attributionControl.setPrefix('Data: NASA/JPL Mars Trek · MRO · Mars Odyssey · MGS');
+
+const T = 'https://trek.nasa.gov/tiles/Mars/EQ/';
+const tile = (id, ext, maxN, bbox, opts={}) => L.tileLayer(`${T}${id}/1.0.0/default/default028mm/{z}/{y}/{x}.${ext}`,
+  Object.assign({maxNativeZoom:maxN, maxZoom:19, tileSize:256, noWrap:true,
+    bounds: bbox ? L.latLngBounds([bbox[1],bbox[0]],[bbox[3],bbox[2]]) : undefined}, opts));
+
+const LAYERS = [
+  {key:'viking', name:'Viking MDIM 2.1 color mosaic', kind:'Optical · 232 m/px', id:'Mars_Viking_MDIM21_ClrMosaic_global_232m', ext:'jpg', max:7, on:true, op:1},
+  {key:'mola', name:'MOLA + HRSC color hillshade', kind:'Topographic · 200 m/px', id:'Mars_MOLA_blend200ppx_HRSC_ClrShade_clon0dd_200mpp_lzw', ext:'jpg', max:8, on:false, op:.6},
+  {key:'ctx', name:'MRO CTX Jezero mosaic', kind:'Optical · 6 m/px', id:'JEZ_ctx_B_soc_008_orthoMosaic_6m_Eqc_latTs0_lon0', ext:'png', max:13, bbox:[77.1604655,18.2110274,77.6991776,18.7211945], on:true, op:1},
+  {key:'hirise', name:'MRO HiRISE Jezero mosaic', kind:'Optical · 25 cm/px', id:'JEZ_hirise_soc_006_orthoMosaic_25cm_Eqc_latTs0_lon0_first_dd', ext:'png', max:17, bbox:[77.2229331,18.3067994,77.583964,18.669315], on:true, op:1},
+  {key:'thday', name:'THEMIS IR Day', kind:'Thermal · 100 m/px', id:'THEMIS_DayIR_ControlledMosaics_100m_v2_oct2018', ext:'png', max:9, on:false, op:.65},
+  {key:'thnight', name:'THEMIS IR Night', kind:'Thermal inertia proxy · 100 m/px', id:'THEMIS_NightIR_ControlledMosaics_100m_v2_oct2018', ext:'png', max:9, on:false, op:.65},
+  {key:'tes', name:'TES thermal inertia', kind:'Thermophysical · global', id:'TES_Thermal_Inertia', ext:'png', max:1, on:false, op:.5},
+];
+const layersEl = document.getElementById('layers');
+LAYERS.forEach(l => {
+  l.layer = tile(l.id, l.ext, l.max, l.bbox, {opacity:l.op});
+  if (l.on) l.layer.addTo(map);
+  const d = document.createElement('div'); d.className='layer';
+  d.innerHTML = `<input type="checkbox" id="L_${l.key}" ${l.on?'checked':''}><label for="L_${l.key}">${l.name}</label><small>${l.kind}</small><input type="range" min="0" max="1" step="0.05" value="${l.op}">`;
+  d.querySelector('input[type=checkbox]').onchange = e => e.target.checked ? l.layer.addTo(map) : map.removeLayer(l.layer);
+  d.querySelector('input[type=range]').oninput = e => l.layer.setOpacity(+e.target.value);
+  layersEl.appendChild(d);
+});
+// keep z-order: optical base under thermal/topo overlays
+LAYERS.forEach((l,i)=>l.layer.setZIndex(['thday','thnight','tes','mola'].includes(l.key)? 10+i : i));
+
+document.getElementById('sources').innerHTML = LAYERS.map(l=>`<div>• ${l.name}<br><code>${l.id}</code></div>`).join('') +
+  `<div>• Space weather: NASA CCMC DONKI API (api.nasa.gov)</div><div>• POV imagery: Mars 2020 Perseverance raw images (mars.nasa.gov)</div><div style="margin-top:4px">Tiles served by <a href="https://trek.nasa.gov/mars/" style="color:var(--accent)">NASA/JPL Mars Trek</a> WMTS.</div>`;
+
+// ---------- Mission data ----------
+// Habitat placed near Perseverance landing site (Octavia E. Butler Landing, ~18.4447N 77.4508E).
+const HAB = L.latLng(18.4447, 77.4508);
+// Science stops: locations are APPROXIMATE, chosen from features visited/observed by Perseverance.
+const STOPS = [
+  {n:'Séítah margin', ll:[18.4440,77.4370], obj:'Olivine-rich igneous cumulate (crater floor). Sample to date the floor & test magma history.', data:'THEMIS night: high thermal inertia → rocky, competent outcrop.', tool:'Core drill, abrasion tool, handheld XRF'},
+  {n:'Máaz floor outcrop', ll:[18.4480,77.4210], obj:'Basaltic lava flows altered by water — measure aqueous alteration minerals.', data:'CTX/HiRISE: polygonal fractured floor, low dune cover.', tool:'Hand lens imager, sample bags'},
+  {n:'Delta front (Hawksbill Gap area)', ll:[18.4555,77.4010], obj:'Layered fine-grained sediments of the ancient lake delta — best target for biosignatures.', data:'MOLA: elevation rises ~40–80 m; slope management needed (approx.).', tool:'Core drill, stratigraphy imaging'},
+  {n:'Upper fan boulder field', ll:[18.4655,77.4060], obj:'Boulders transported by high-energy floods — sample rocks from outside Jezero\'s watershed.', data:'HiRISE: metre-scale boulders visible; THEMIS day: warm, rocky surface.', tool:'Rock hammer, sample bags'},
+];
+const HAZ = [
+  {lvl:'nogo', name:'Séítah dune field', poly:[[18.4320,77.4280],[18.4420,77.4250],[18.4440,77.4330],[18.4390,77.4420],[18.4300,77.4400]], note:'Soft aeolian ripples — high risk of suit/rover sinkage. Avoid.'},
+  {lvl:'caution', name:'Delta scarp', poly:[[18.4520,77.3960],[18.4600,77.3970],[18.4590,77.4060],[18.4520,77.4060]], note:'Steep layered scarp, loose talus. Use mapped ascent only; buddy rope.'},
+  {lvl:'caution', name:'Boulder field', poly:[[18.4630,77.4020],[18.4690,77.4030],[18.4690,77.4110],[18.4630,77.4100]], note:'Metre-scale boulders — trip & suit-puncture risk. Slow pace.'},
+];
+
+const routeLayer = L.layerGroup().addTo(map), hazLayer = L.layerGroup().addTo(map), ringLayer = L.layerGroup().addTo(map), userLayer = L.layerGroup().addTo(map);
+const icon = (txt, cls='') => L.divIcon({className:'pin '+cls, html:txt, iconSize:[26,26]});
+
+L.marker(HAB, {icon:icon('⌂','hab'), zIndexOffset:1000}).addTo(map)
+  .bindPopup('<b>Habitat / Ascent vehicle</b><br>Near Perseverance landing site (Octavia E. Butler Landing). EVA start & safe-haven point.');
+
+HAZ.forEach(h => L.polygon(h.poly, {color: h.lvl==='nogo'?'#ff4d4d':'#ffc53d', weight:2, fillOpacity:.25, dashArray:'4 4'})
+  .bindPopup(`<b>${h.lvl==='nogo'?'⛔ NO-GO':'⚠ CAUTION'}: ${h.name}</b><br>${h.note}<br><i>Planning annotation (approx.), not a measured boundary.</i>`).addTo(hazLayer));
+
+// POV images: Perseverance raw image gallery (links; no hotlinking dependency)
+const POV = 'https://mars.nasa.gov/mars2020/multimedia/raw-images/';
+STOPS.forEach((s,i) => {
+  s.marker = L.marker(s.ll, {icon:icon(i+1)}).bindPopup(`<b>Stop ${i+1}: ${s.n}</b><br>${s.obj}<br><small style="color:#ffc53d">${s.data}</small><br><small>Kit: ${s.tool}</small><br><a href="${POV}" target="_blank" style="color:#ff7a3d">▶ Ground-level views (Perseverance raw images)</a>`).addTo(routeLayer);
+});
+
+let userPts = [];
+function routePts(){ return userPts.length ? [HAB, ...userPts, HAB] : [HAB, ...STOPS.map(s=>L.latLng(s.ll)), HAB]; }
+let routeLine;
+
+// point-in-polygon + segment sampling for hazard crossings
+function inPoly(p, poly){ let c=false; for(let i=0,j=poly.length-1;i<poly.length;j=i++){const [yi,xi]=poly[i],[yj,xj]=poly[j]; if(((yi>p.lat)!=(yj>p.lat)) && (p.lng < (xj-xi)*(p.lat-yi)/(yj-yi)+xi)) c=!c;} return c; }
+function hazardsOn(pts){ const hit = new Set(); for(let i=1;i<pts.length;i++) for(let t=0;t<=1;t+=.02){ const p=L.latLng(pts[i-1].lat+(pts[i].lat-pts[i-1].lat)*t, pts[i-1].lng+(pts[i].lng-pts[i-1].lng)*t); HAZ.forEach(h=>{ if(inPoly(p,h.poly)) hit.add(h); }); } return [...hit]; }
+
+function update(){
+  const pts = routePts();
+  if (routeLine) routeLayer.removeLayer(routeLine);
+  routeLine = L.polyline(pts, {color: userPts.length?'#7dd3ff':'#ff7a3d', weight:4, opacity:.9, dashArray: userPts.length?null:'10 6'}).addTo(routeLayer);
+  let km=0; for(let i=1;i<pts.length;i++) km+=dist(pts[i-1],pts[i]);
+  const v=+speed.value||2, sMin=+stopMin.value||0, eva=+evaH.value||7;
+  const nStops = userPts.length ? userPts.length : STOPS.length;
+  const walk=km/v, sci=nStops*sMin/60, tot=walk+sci, margin=eva-tot;
+  const haz = hazardsOn(pts);
+  kDist.textContent=fmtKm(km); kWalk.textContent=fmtH(walk); kSci.textContent=fmtH(sci); kTot.textContent=fmtH(tot);
+  kMargin.textContent=(margin<0?'-':'')+fmtH(Math.abs(margin)); kMargin.style.color = margin<1?'var(--bad)':margin<2?'var(--warn)':'var(--ok)';
+  kHaz.textContent = haz.length ? haz.map(h=>h.name).join(', ') : 'none';
+  const nogo = haz.some(h=>h.lvl==='nogo');
+  let st = 'go', msg='GO — route within consumables, no no-go zones';
+  if (nogo || margin<1) { st='nogo'; msg = nogo ? 'NO-GO — route crosses a no-go hazard zone' : 'NO-GO — consumables margin < 1 h reserve'; }
+  else if (haz.length || margin<2) { st='caution'; msg='CAUTION — '+(haz.length?'crosses caution zone':'margin under 2 h'); }
+  goStatus.className='status '+st; goStatus.textContent=msg;
+  // walk-back ring: max distance you can still walk back with 1 h reserve, out-and-back
+  ringLayer.clearLayers();
+  const rKm = Math.max(0,(eva-1)/2*v);
+  L.circle(HAB, {radius: rKm*1000*(6371/R_MARS), color:'#7dffb2', weight:1.5, fill:false, dashArray:'2 6'})
+    .bindTooltip(`Walk-back limit ${fmtKm(rKm)} (out-and-back, 1 h reserve)`,{sticky:true}).addTo(ringLayer);
+  // NOTE: L.circle radius uses Earth metres in EPSG4326 → scaled by 6371/3389.5 so the ring is true on Mars.
+  // HUD
+  hDist.textContent=fmtKm(km); hTime.textContent='EVA '+fmtH(tot)+' / '+eva+'h';
+  hO2.textContent=(Math.max(0,margin/eva*100)).toFixed(0)+'% margin'; hRet.textContent='Return radius '+fmtKm(rKm);
+  const first = userPts[0] || L.latLng(STOPS[0].ll);
+  hNext.textContent = userPts.length ? 'WP 1' : STOPS[0].n; hNextD.textContent = fmtKm(dist(HAB, first))+' from hab';
+  // stop list
+  stops.innerHTML = '';
+  let acc=0;
+  (userPts.length ? userPts.map((p,i)=>({n:'Waypoint '+(i+1), ll:[p.lat,p.lng], obj:'Custom waypoint', data:''})) : STOPS).forEach((s,i)=>{
+    acc += dist(pts[i], pts[i+1]);
+    const d=document.createElement('div'); d.className='stop';
+    d.innerHTML=`<div class="t">${i+1}. ${s.n}</div><div class="d">${s.obj}</div><div class="m">${fmtKm(acc)} · T+${fmtH(acc/v + i*sMin/60)}</div>`;
+    d.onclick=()=>{ map.flyTo(s.ll, 16); s.marker && s.marker.openPopup(); };
+    stops.appendChild(d);
+  });
+}
+['speed','stopMin','evaH'].forEach(id=>document.getElementById(id).oninput=update);
+
+// waypoint mode
+let addMode=false;
+bAdd.onclick=()=>{ addMode=!addMode; bAdd.classList.toggle('on',addMode); map.getContainer().style.cursor=addMode?'crosshair':''; };
+bClear.onclick=()=>{ userPts=[]; userLayer.clearLayers(); routeLayer.eachLayer(l=>{}); STOPS.forEach(s=>s.marker.addTo(routeLayer)); update(); };
+map.on('click', e=>{ if(!addMode) return;
+  if(!userPts.length) STOPS.forEach(s=>routeLayer.removeLayer(s.marker));
+  userPts.push(e.latlng); L.marker(e.latlng,{icon:icon(userPts.length,'wp')}).addTo(userLayer); update(); });
+bHud.onclick=()=>{ document.body.classList.toggle('hud'); bHud.classList.toggle('on'); };
+
+const toggle=(id,g)=>document.getElementById(id).onchange=e=>e.target.checked?g.addTo(map):map.removeLayer(g);
+toggle('oRoute',routeLayer); toggle('oHaz',hazLayer); toggle('oRing',ringLayer);
+
+// Mars-correct scale bar + coords
+function scaleBar(){
+  const y=map.getSize().y/2, a=map.containerPointToLatLng([0,y]), b=map.containerPointToLatLng([100,y]);
+  const km=dist(a,b), nice=[.01,.02,.05,.1,.2,.5,1,2,5,10,20,50,100,200,500,1000,2000].reverse().find(n=>n<=km)||.01;
+  scaleBar.el ??= document.getElementById('scaleBar'); scaleBar.el.style.width=(100*nice/km)+'px'; scaleTxt.textContent=fmtKm(nice)+' (Mars)';
+}
+map.on('zoomend moveend', scaleBar); scaleBar();
+map.on('mousemove', e=>coords.textContent=`lat ${e.latlng.lat.toFixed(4)}°, lon ${e.latlng.lng.toFixed(4)}°E · ${fmtKm(dist(HAB,e.latlng))} from hab`);
+
+// ---------- Live space weather: NASA DONKI ----------
+(async()=>{
+  const end=new Date(), start=new Date(end-30*864e5), f=d=>d.toISOString().slice(0,10);
+  try{
+    const [flr, sep, cme] = await Promise.all(['FLR','SEP','CME'].map(t=>fetch(`https://api.nasa.gov/DONKI/${t}?startDate=${f(start)}&endDate=${f(end)}&api_key=DEMO_KEY`).then(r=>r.ok?r.json():[]).catch(()=>[])));
+    const bigFlares=(flr||[]).filter(x=>/^[XM]/.test(x.classType||''));
+    const lastSep=(sep||[]).slice(-1)[0];
+    const sepRecent = lastSep && (end-new Date(lastSep.eventTime))<3*864e5;
+    const level = sepRecent?'nogo':bigFlares.length>3?'caution':'go';
+    wx.innerHTML = `<div class="kv"><span>Solar flares (30 d)</span><b>${(flr||[]).length} (${bigFlares.length} M/X)</b><span>CMEs (30 d)</span><b>${(cme||[]).length}</b><span>SEP events (30 d)</span><b>${(sep||[]).length}</b><span>Last SEP</span><b>${lastSep?lastSep.eventTime.slice(0,10):'none'}</b></div>
+      <div class="status ${level}">${level==='nogo'?'SHELTER — recent SEP event':level==='caution'?'MONITOR — elevated flare activity':'NOMINAL — no recent SEP'}</div>
+      <div style="margin-top:4px">Events observed from Earth/L1; Mars exposure depends on heliospheric geometry — treat as advisory.</div>`;
+    hWx.textContent = level==='nogo'?'SHELTER':level==='caution'?'MONITOR':'NOMINAL'; hWxD.textContent=`${bigFlares.length} M/X flares · ${(sep||[]).length} SEP (30d)`;
+  }catch(e){ wx.textContent='Space weather feed unavailable (offline / rate limit).'; hWx.textContent='N/A'; }
+})();
+
+update();
+</script>
+</body>
+</html>
